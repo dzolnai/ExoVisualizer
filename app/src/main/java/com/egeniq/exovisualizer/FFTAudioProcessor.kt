@@ -30,7 +30,7 @@ class FFTAudioProcessor : AudioProcessor {
         private const val EXO_BUFFER_MULTIPLICATION_FACTOR = 4
 
         // Extra size next in addition to the AudioTrack buffer size
-        private const val BUFFER_EXTRA_SIZE = 32_768
+        private const val BUFFER_EXTRA_SIZE = SAMPLE_SIZE * 8
     }
 
     private var noise: Noise? = null
@@ -50,7 +50,7 @@ class FFTAudioProcessor : AudioProcessor {
 
     private lateinit var srcBuffer: ByteBuffer
     private var srcBufferPosition = 0
-    private val tempByteArray = ByteArray(SAMPLE_SIZE)
+    private val tempByteArray = ByteArray(SAMPLE_SIZE * 2)
 
     private var audioTrackBufferSize = 0
 
@@ -192,16 +192,27 @@ class FFTAudioProcessor : AudioProcessor {
         }
         srcBuffer.put(buffer.array())
         srcBufferPosition += buffer.array().size
+        // Since this is PCM 16 bit, each sample will be 2 bytes.
+        // So to get the sample size in the end, we need to take twice as many bytes off the buffer
+        val bytesToProcess = SAMPLE_SIZE * 2
+        var currentByte : Byte? = null
         while (srcBufferPosition > audioTrackBufferSize) {
             srcBuffer.position(0)
-            srcBuffer.get(tempByteArray, 0, SAMPLE_SIZE)
+            srcBuffer.get(tempByteArray, 0, bytesToProcess)
+
             tempByteArray.forEachIndexed { index, byte ->
-                src[index] = byte / Byte.MAX_VALUE.toFloat()
-                dst[index] = 0f
+                if (currentByte == null) {
+                    currentByte = byte
+                } else {
+                    src[index / 2] = (currentByte!!.toFloat() * Byte.MAX_VALUE + byte) / (Byte.MAX_VALUE * Byte.MAX_VALUE)
+                    dst[index / 2] = 0f
+                    currentByte = null
+                }
+
             }
-            srcBuffer.position(SAMPLE_SIZE)
+            srcBuffer.position(bytesToProcess)
             srcBuffer.compact()
-            srcBufferPosition -= SAMPLE_SIZE
+            srcBufferPosition -= bytesToProcess
             srcBuffer.position(srcBufferPosition)
             val fft = noise?.fft(src, dst)!!
             listener?.onFFTReady(sampleRateHz, channelCount, fft)

@@ -32,7 +32,7 @@ class FFTBandView @JvmOverloads constructor(
 
     private val bands = FREQUENCY_BAND_LIMITS.size
     private val size = FFTAudioProcessor.SAMPLE_SIZE / 2
-    private val maxConst = 27_500 // Reference max value for accum magnitude
+    private val maxConst = 25_000 // Reference max value for accum magnitude
 
     private val fft: FloatArray = FloatArray(size)
     private val paintBandsFill = Paint()

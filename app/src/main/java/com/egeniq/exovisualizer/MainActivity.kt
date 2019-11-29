@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         // 10 kHz test sound:
         // val uri = Uri.parse("https://www.mediacollege.com/audio/tone/files/10kHz_44100Hz_16bit_05sec.mp3")
         // Sweep from 20 to 20 kHz
-        //val uri = Uri.parse("https://www.churchsoundcheck.com/CSC_sweep_20-20k.wav")
+        // val uri = Uri.parse("https://www.churchsoundcheck.com/CSC_sweep_20-20k.wav")
         val mediaSource = ProgressiveMediaSource.Factory(
             DefaultDataSourceFactory(this, "ExoVisualizer")
         ).createMediaSource(uri)
