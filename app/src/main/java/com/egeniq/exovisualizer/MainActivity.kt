@@ -1,14 +1,14 @@
 package com.egeniq.exovisualizer
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.exoplayer2.DefaultRenderersFactory
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.ExoPlayerFactory
-import com.google.android.exoplayer2.audio.AudioProcessor
+import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.audio.*
+import com.google.android.exoplayer2.mediacodec.MediaCodecSelector
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 
 class MainActivity : AppCompatActivity() {
@@ -26,13 +26,47 @@ class MainActivity : AppCompatActivity() {
 
     private fun initPlayer() {
         // We need to create a renderers factory to inject our own audio processor at the end of the list
-        val renderersFactory = object : DefaultRenderersFactory(this) {
-            override fun buildAudioProcessors(): Array<AudioProcessor> {
-                val processors = super.buildAudioProcessors()
-                return processors + fftAudioProcessor
+        val context = this
+        val renderersFactory = object : DefaultRenderersFactory(context) {
+
+            override fun buildAudioRenderers(
+                context: Context,
+                extensionRendererMode: Int,
+                mediaCodecSelector: MediaCodecSelector,
+                enableDecoderFallback: Boolean,
+                audioSink: AudioSink,
+                eventHandler: Handler,
+                eventListener: AudioRendererEventListener,
+                out: ArrayList<Renderer>
+            ) {
+                out.add(
+                    MediaCodecAudioRenderer(
+                        context,
+                        mediaCodecSelector,
+                        enableDecoderFallback,
+                        eventHandler,
+                        eventListener,
+                        DefaultAudioSink(
+                            AudioCapabilities.getCapabilities(context),
+                            arrayOf(fftAudioProcessor)
+                        )
+                    )
+                )
+
+                super.buildAudioRenderers(
+                    context,
+                    extensionRendererMode,
+                    mediaCodecSelector,
+                    enableDecoderFallback,
+                    audioSink,
+                    eventHandler,
+                    eventListener,
+                    out
+                )
             }
         }
-        player = ExoPlayerFactory.newSimpleInstance(this, renderersFactory, DefaultTrackSelector())
+        player = SimpleExoPlayer.Builder(context, renderersFactory)
+            .build()
 
         val visualizer = findViewById<ExoVisualizer>(R.id.visualizer)
         visualizer.processor = fftAudioProcessor
@@ -46,10 +80,11 @@ class MainActivity : AppCompatActivity() {
         // Sweep from 20 to 20 kHz
         // val uri = Uri.parse("https://www.churchsoundcheck.com/CSC_sweep_20-20k.wav")
         val mediaSource = ProgressiveMediaSource.Factory(
-            DefaultDataSourceFactory(this, "ExoVisualizer")
-        ).createMediaSource(uri)
+            DefaultDataSourceFactory(context, "ExoVisualizer")
+        ).createMediaSource(MediaItem.Builder().setUri(uri).build())
         player?.playWhenReady = true
-        player?.prepare(mediaSource, true, true)
+        player?.setMediaSource(mediaSource)
+        player?.prepare()
     }
 
     override fun onResume() {

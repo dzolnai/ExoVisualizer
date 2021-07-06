@@ -10,6 +10,7 @@ import android.view.View
 import java.lang.System.arraycopy
 import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.pow
 
 
 /**
@@ -67,7 +68,7 @@ class FFTBandView @JvmOverloads constructor(
         paintPath.style = Paint.Style.STROKE
     }
 
-    fun drawAudio(canvas: Canvas) {
+    private fun drawAudio(canvas: Canvas) {
         // Clear the previous drawing on the screen
         canvas.drawColor(Color.TRANSPARENT)
 
@@ -91,8 +92,8 @@ class FFTBandView @JvmOverloads constructor(
                 // Here we iterate within this single band
                 for (j in 0 until (nextLimitAtPosition - currentFftPosition) step 2) {
                     // Convert real and imaginary part to get energy
-                    val raw = (Math.pow(fft[currentFftPosition + j].toDouble(), 2.0) +
-                            Math.pow(fft[currentFftPosition + j + 1].toDouble(), 2.0)).toFloat()
+                    val raw = (fft[currentFftPosition + j].toDouble().pow(2.0) +
+                            fft[currentFftPosition + j + 1].toDouble().pow(2.0)).toFloat()
 
                     // Hamming window (by frequency band instead of frequency, otherwise it would prefer 10kHz, which is too high)
                     // The window mutes down the very high and the very low frequencies, usually not hearable by the human ear
