@@ -203,6 +203,7 @@ class FFTAudioProcessor : AudioProcessor {
 
     override fun queueEndOfStream() {
         inputEnded = true
+        processBuffer = AudioProcessor.EMPTY_BUFFER
     }
 
     override fun getOutput(): ByteBuffer {
