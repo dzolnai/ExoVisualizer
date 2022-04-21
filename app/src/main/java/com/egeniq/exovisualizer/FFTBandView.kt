@@ -188,5 +188,7 @@ class FFTBandView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         drawAudio(canvas)
+        // By calling invalidate, we request a redraw. See https://github.com/dzolnai/ExoVisualizer/issues/2
+        invalidate()
     }
 }
