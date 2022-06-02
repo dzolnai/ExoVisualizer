@@ -98,7 +98,7 @@ class FFTBandView @JvmOverloads constructor(
                     // Hamming window (by frequency band instead of frequency, otherwise it would prefer 10kHz, which is too high)
                     // The window mutes down the very high and the very low frequencies, usually not hearable by the human ear
                     val m = bands / 2
-                    val windowed = raw * (0.54f + 0.46f * cos((currentFrequencyBandLimitIndex - m) * Math.PI / (m + 1))).toFloat()
+                    val windowed = raw * (0.54f - 0.46f * cos(2 * Math.PI * currentFrequencyBandLimitIndex / (m + 1))).toFloat()
                     accum += windowed
                 }
             }
