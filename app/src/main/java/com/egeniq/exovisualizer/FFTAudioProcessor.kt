@@ -122,7 +122,7 @@ class FFTAudioProcessor : AudioProcessor {
         audioTrackBufferSize = getDefaultBufferSizeInBytes(inputAudioFormat)
 
         srcBuffer = ByteBuffer.allocate(audioTrackBufferSize + BUFFER_EXTRA_SIZE)
-
+        srcBufferPosition = 0
         return inputAudioFormat
     }
 
@@ -170,6 +170,13 @@ class FFTAudioProcessor : AudioProcessor {
     private fun processFFT(buffer: ByteBuffer) {
         if (listener == null) {
             return
+        }
+        if(srcBuffer.remaining() < buffer.array().size){
+            // Expand the srcBuffer when the capacity is insufficient
+            val newBuffer = ByteBuffer.allocate(srcBuffer.capacity() + buffer.array().size)
+            srcBuffer.flip()
+            newBuffer.put(srcBuffer)
+            srcBuffer = newBuffer
         }
         srcBuffer.put(buffer.array())
         srcBufferPosition += buffer.array().size
